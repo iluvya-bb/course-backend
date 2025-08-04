@@ -12,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "courseId",
         as: "subscriptions",
       });
+      Course.belongsTo(models.Teacher, {
+        foreignKey: "teacherId",
+        as: "teacher",
+      });
     }
   }
   Course.init(
@@ -20,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       description: DataTypes.TEXT,
       price: DataTypes.FLOAT,
       bannerImage: DataTypes.STRING,
+      teacherId: DataTypes.INTEGER,
     },
     {
       sequelize,

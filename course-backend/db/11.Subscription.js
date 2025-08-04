@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       userId: DataTypes.INTEGER,
       courseId: DataTypes.INTEGER,
       endDate: DataTypes.DATE,
+      purchasePrice: DataTypes.FLOAT,
     },
     {
       sequelize,

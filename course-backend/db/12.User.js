@@ -9,6 +9,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "userId",
         as: "subscriptions",
       });
+      User.hasMany(models.Session, {
+        foreignKey: "userId",
+        as: "sessions",
+      });
+      User.hasMany(models.Booking, {
+        foreignKey: "userId",
+        as: "bookings",
+      });
     }
   }
   User.init(
@@ -20,16 +28,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       role: {
-        type: DataTypes.ENUM("user", "admin"),
+        type: DataTypes.ENUM("user", "admin", "teacher"),
         defaultValue: "user",
       },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
-      },
-      sessionToken: {
-        type: DataTypes.STRING,
-        allowNull: true,
       },
       avatar: {
         type: DataTypes.STRING,

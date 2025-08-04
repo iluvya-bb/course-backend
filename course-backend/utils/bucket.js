@@ -3,9 +3,12 @@ const {
   PutObjectCommand,
   GetObjectCommand,
   ListObjectsCommand,
+  DeleteObjectCommand,
+  ListObjectsV2Command,
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const fs = require("fs");
+const path = require("path");
 const { loadConfig } = require("../configs/config");
 const conf = loadConfig();
 
@@ -20,7 +23,7 @@ const s3 = new S3Client({
 const BUCKET_NAME = conf.aws.s3Bucket;
 
 exports.uploadLocalFile = async (filePath, key) => {
-  await console.log(filePath, key);
+  console.log(`Attempting to upload file from ${filePath} to S3 with key ${key}`);
 
   const fileStream = await fs.createReadStream(filePath);
 
@@ -66,5 +69,54 @@ exports.listFiles = async () => {
     Contents.forEach((file) => console.log(file.Key));
   } catch (error) {
     console.error("Error listing files:", error);
+  }
+};
+
+exports.deleteFile = async (key) => {
+  const command = new DeleteObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+  });
+
+  try {
+    await s3.send(command);
+    console.log(`File deleted successfully: ${key}`);
+  } catch (error) {
+    console.error("Error deleting file:", error);
+  }
+};
+
+exports.deleteDirectory = async (s3Path) => {
+  const listParams = {
+    Bucket: BUCKET_NAME,
+    Prefix: s3Path,
+  };
+
+  const listedObjects = await s3.send(new ListObjectsV2Command(listParams));
+
+  if (!listedObjects.Contents || listedObjects.Contents.length === 0) return;
+
+  const deleteParams = {
+    Bucket: BUCKET_NAME,
+    Delete: { Objects: [] },
+  };
+
+  listedObjects.Contents.forEach(({ Key }) => {
+    deleteParams.Delete.Objects.push({ Key });
+  });
+
+  await s3.send(new DeleteObjectCommand(deleteParams));
+};
+
+exports.uploadDirectory = async (directoryPath, s3Path) => {
+  const files = fs.readdirSync(directoryPath);
+  for (const file of files) {
+    const filePath = path.join(directoryPath, file);
+    const fileKey = `${s3Path}/${file}`;
+    if (fs.lstatSync(filePath).isDirectory()) {
+      await exports.uploadDirectory(filePath, fileKey);
+    } else {
+      await exports.uploadLocalFile(filePath, fileKey);
+    }
   }
 };

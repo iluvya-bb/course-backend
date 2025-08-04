@@ -3,38 +3,10 @@ const ErrorResponse = require("../utils/errorResponse.js");
 const asyncHandler = require("./async");
 
 exports.protect = asyncHandler(async (req, res, next) => {
-	let token;
-
-	if (
-		req.headers.authorization &&
-		req.headers.authorization.startsWith("Bearer")
-	) {
-		token = req.headers.authorization.split(" ")[1];
-	}
-
-	const { User } = req.db.course.models;
-
-	if (!token) {
-		return next(new ErrorResponse("Not authorized to access this route", 401));
-	}
-
-	try {
-		const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-		const user = await User.findByPk(decoded.id);
-
-		if (!user || user.sessionToken !== token) {
-			return next(
-				new ErrorResponse("Not authorized to access this route", 401),
-			);
-		}
-
-		req.user = user;
-
-		next();
-	} catch (err) {
-		return next(new ErrorResponse("Not authorized to access this route", 401));
-	}
+  if (!req.user) {
+    return next(new ErrorResponse("Not authorized to access this route", 401));
+  }
+  next();
 });
 
 exports.authorize = (...roles) => {

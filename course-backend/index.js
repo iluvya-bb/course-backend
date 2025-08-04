@@ -8,6 +8,7 @@ const { loadConfig } = require("./configs/config");
 const { DB } = require("./db");
 const { dbMiddleware, pickTenant } = require("./middlewares/tenantHandler");
 const { tokenParsing } = require("./middlewares/auth");
+const { extendToken } = require("./middlewares/session");
 const route = require("./routes");
 const EODService = require("./services/EODService");
 // main function
@@ -21,7 +22,7 @@ const EODService = require("./services/EODService");
 
 	app.use(cors());
 	app.use(dbMiddleware(db));
-	app.use(tokenParsing);
+	app.use(extendToken);
 	// init tenant picker
 	app.use(pickTenant);
 	app.use(express.json());
